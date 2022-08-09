@@ -16,8 +16,6 @@ app.use((req, res, next) => {
   next();
 });
 
-
-
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 

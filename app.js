@@ -16,21 +16,23 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use((req, res) => {
-  res.status(404);
 
-  if (req.accepts('json')) {
-    res.json({ message: 'Not found' });
-    return;
-  }
-  res.type('txt').send('Not found');
-});
 
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 
 app.use('/users', userRouter);
 app.use('/cards', cardRouter);
+
+app.use((req, res) => {
+  res.status(404);
+
+  if (req.accepts('json')) {
+    res.json({ message: 'Page Not found' });
+    return;
+  }
+  res.type('txt').send('Not found');
+});
 
 mongoose.connect('mongodb://localhost:27017/mestodb', {
   useNewUrlParser: true,

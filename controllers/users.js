@@ -1,14 +1,20 @@
 const bcrypt = require('bcrypt');
-// const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 
 const BadRequestError = require('../errors/BadRequestError');
 const ConflictError = require('../errors/ConflictError');
 const NotFoundError = require('../errors/NotFoundError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
+
+const {
+  DUBLICATE_MONGOOSE_ERROR_CODE,
+  SALT_ROUNDS,
+  SECRET_KEY,
+  HTTP_OK,
+  HTTP_CREATE,
+} = require('../settings/conf');
 
 const User = require('../models/user');
-
-const DUBLICATE_MONGOOSE_ERROR_CODE = 11000;
-const SALT_ROUNDS = 10;
 
 module.exports.createUser = (req, res, next) => {
   const {
@@ -17,17 +23,17 @@ module.exports.createUser = (req, res, next) => {
   if (!email || !password) {
     next(new BadRequestError('Поля не могут быть пустыми.', ['email', 'password']));
   }
-
   bcrypt.hash(password, SALT_ROUNDS)
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
     }))
-    .then((user) => res.status(201).send({
+    .then((user) => res.setHeader('Content-Type', 'application/json').status(
+      HTTP_CREATE,
+    ).send({
       name: user.name,
       about: user.about,
       avatar: user.avatar,
       email: user.email,
-      _id: user._id,
     }))
     .catch((err) => {
       if (err.code === DUBLICATE_MONGOOSE_ERROR_CODE) {
@@ -88,30 +94,31 @@ module.exports.updateAvatar = (req, res, next) => {
     });
 };
 
-// module.exports.login = (req, res) => {
-//   const { email, password } = req.body;
-//   User.findOne({ email }).select('+password')
-//   .then((user) => {
-//     if (!user) {
-//       return Promise.reject(new AuthErr('Неправильные почта или пароль'));
-//     }
-//     return Promise.all([bcrypt.compare(password, user.password), user]);
-//   })
-//   .then(([isPasswordCorrect, user]) => {
-//     if (!isPasswordCorrect) {
-//       return Promise.reject(new AuthErr('Неправильная почта или пароль'));
-//     }
-//     const token = jwt.sign(
-//       { _id: user._id },
-//       'some-secret-key',
-//       { expiresIn: '7d' },
-//     );
-//     return res
-//       .cookie('jwt', token, {
-//         maxAge: 3600000,
-//         httpOnly: true,
-//       })
-//       .send({ message: 'Всё верно!' });
-//   })
-//   .catch(next);}
-// };
+module.exports.login = (req, res, next) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    next(new BadRequestError('Поля не могут быть пустыми.', ['email', 'password']));
+  }
+  User.findOne({ email }).select('+password')
+    .then((user) => {
+      if (!user) {
+        next(new BadRequestError('Пользователь не зарегистрирован.'));
+      } else {
+        bcrypt.compare(password, user.password, (err, data) => {
+          if (err) {
+            next(err);
+          }
+          if (data) {
+            const token = jwt.sign(
+              { _id: user._id },
+              SECRET_KEY,
+              { expiresIn: '7d' },
+            );
+            res.status(HTTP_OK).send({ message: 'Success!', access_token: token });
+          } else {
+            next(new UnauthorizedError('Не верные авторизационные данные!'));
+          }
+        });
+      }
+    });
+};

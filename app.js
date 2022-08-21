@@ -1,20 +1,33 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const InternalServerError = require('./errors/InternalServerError');
+
+const {
+  login,
+  createUser,
+} = require('./controllers/users');
 
 const { PORT = 3000 } = process.env;
 
 const app = express();
 
 function Error(err, req, res, next) {
-  if (err.detail) {
-    res.status(err.statusCode).send({
-      message: err.message,
-      detail: err.detail,
-    });
+  if (err.statusCode) {
+    if (err.detail) {
+      res.status(err.statusCode).send({
+        message: err.message,
+        detail: err.detail,
+      });
+    } else {
+      res.status(err.statusCode).send({
+        message: err.message,
+      });
+    }
   } else {
-    res.status(err.statusCode).send({
-      message: err.message,
+    const error = new InternalServerError();
+    res.status(error.statusCode).send({
+      message: error.message,
     });
   }
 }
@@ -25,6 +38,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 
+app.post('/signup', createUser);
+app.post('/signin', login);
 app.use('/users', userRouter);
 app.use('/cards', cardRouter);
 

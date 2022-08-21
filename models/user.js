@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: [true, 'Не заполнен password'],
     select: false,
   },
 });

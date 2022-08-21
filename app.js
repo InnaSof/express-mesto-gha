@@ -6,12 +6,17 @@ const { PORT = 3000 } = process.env;
 
 const app = express();
 
-function TestError(error, request, response, next) {
-    // response.status(error.statusCode).send({
-    //   'Message': error.message
-    // });
-  next(error)
-
+function Error(err, req, res, next) {
+  if (err.detail) {
+    res.status(err.statusCode).send({
+      message: err.message,
+      detail: err.detail,
+    });
+  } else {
+    res.status(err.statusCode).send({
+      message: err.message,
+    });
+  }
 }
 
 app.use(bodyParser.json());
@@ -23,7 +28,7 @@ const cardRouter = require('./routes/cards');
 app.use('/users', userRouter);
 app.use('/cards', cardRouter);
 
-app.use(TestError);
+app.use(Error);
 
 app.use((req, res) => {
   res.status(404);

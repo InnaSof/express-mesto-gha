@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const InternalServerError = require('./errors/InternalServerError');
+const verifyToken = require('./middlewares/auth');
 
 const {
   login,
@@ -40,8 +41,8 @@ const cardRouter = require('./routes/cards');
 
 app.post('/signup', createUser);
 app.post('/signin', login);
-app.use('/users', userRouter);
-app.use('/cards', cardRouter);
+app.use('/users', verifyToken, userRouter);
+app.use('/cards', verifyToken, cardRouter);
 
 app.use(Error);
 

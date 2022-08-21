@@ -6,21 +6,24 @@ const { PORT = 3000 } = process.env;
 
 const app = express();
 
+function TestError(error, request, response, next) {
+    // response.status(error.statusCode).send({
+    //   'Message': error.message
+    // });
+  next(error)
+
+}
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-
-app.use((req, res, next) => {
-  req.user = {
-    _id: '62f1720482aa962797082562',
-  };
-  next();
-});
 
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 
 app.use('/users', userRouter);
 app.use('/cards', cardRouter);
+
+app.use(TestError);
 
 app.use((req, res) => {
   res.status(404);

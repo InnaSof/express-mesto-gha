@@ -1,8 +1,17 @@
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+const BadRequestError = require('../errors/BadRequestError');
+const ConflictError = require('../errors/ConflictError');
+
 const User = require('../models/user');
 
 const BAD_REQUEST = 400;
 const NOT_FOUND = 404;
 const INTERNAL_SERVER_ERROR = 500;
+const DUBLICATE_MONGOOSE_ERROR_CODE = 11000;
+
+const SALT_ROUNDS = 10;
 
 module.exports.getUsers = (req, res) => {
   User.find({})
@@ -29,16 +38,27 @@ module.exports.getUserById = (req, res) => {
     });
 };
 
-module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
-    .then((user) => res.send(user))
+module.exports.createUser = (req, res, next) => {
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+
+  bcrypt.hash(password, SALT_ROUNDS)
+
+    .then((hash) => User.create({
+      name, about, avatar, email, password: hash,
+    }))
+    .then(() => res.status(201).send({
+      name, about, avatar, email,
+    }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
-        return;
+      if (err.code === DUBLICATE_MONGOOSE_ERROR_CODE) {
+        next(new ConflictError('Такой e-mail уже зарегистрирован'));
+      } else if (err.name === 'ValidationError') {
+        next(new BadRequestError(err.message));
+      }else {
+        next(err);
       }
-      res.status(INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
@@ -67,3 +87,31 @@ module.exports.updateAvatar = (req, res) => {
       res.status(INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
 };
+
+// module.exports.login = (req, res) => {
+//   const { email, password } = req.body;
+//   User.findOne({ email }).select('+password')
+//   .then((user) => {
+//     if (!user) {
+//       return Promise.reject(new AuthErr('Неправильные почта или пароль'));
+//     }
+//     return Promise.all([bcrypt.compare(password, user.password), user]);
+//   })
+//   .then(([isPasswordCorrect, user]) => {
+//     if (!isPasswordCorrect) {
+//       return Promise.reject(new AuthErr('Неправильная почта или пароль'));
+//     }
+//     const token = jwt.sign(
+//       { _id: user._id },
+//       'some-secret-key',
+//       { expiresIn: '7d' },
+//     );
+//     return res
+//       .cookie('jwt', token, {
+//         maxAge: 3600000,
+//         httpOnly: true,
+//       })
+//       .send({ message: 'Всё верно!' });
+//   })
+//   .catch(next);}
+// };

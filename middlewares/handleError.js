@@ -1,6 +1,6 @@
 const InternalServerError = require('../errors/InternalServerError');
 
-module.exports.handleError = (err, req, res, next) => {
+module.exports.handleError = (err, req, res) => {
   if (err.statusCode) {
     if (err.detail) {
       res.status(err.statusCode).send({

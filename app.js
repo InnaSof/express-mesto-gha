@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-// const { celebrate, Joi, errors } = require('celebrate');
 const verifyToken = require('./middlewares/auth');
 const { handleError } = require('./middlewares/handleError');
 
@@ -27,8 +26,6 @@ app.use('/users', verifyToken, userRouter);
 app.use('/cards', verifyToken, cardRouter);
 
 app.use(handleError);
-
-// app.use(errors());
 
 app.use((req, res) => {
   res.status(404);

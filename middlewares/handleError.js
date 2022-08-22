@@ -1,6 +1,6 @@
 const InternalServerError = require('../errors/InternalServerError');
 
-module.exports.handleError = (err, req, res) => {
+module.exports.handleError = (err, req, res, next) => {
   if (err.statusCode) {
     if (err.detail) {
       res.status(err.statusCode).send({
@@ -13,9 +13,6 @@ module.exports.handleError = (err, req, res) => {
       });
     }
   } else {
-    const error = new InternalServerError();
-    res.status(error.statusCode).send({
-      message: error.message,
-    });
+    next(new InternalServerError());
   }
 };

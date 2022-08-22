@@ -1,8 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const InternalServerError = require('./errors/InternalServerError');
+// const { celebrate, Joi, errors } = require('celebrate');
 const verifyToken = require('./middlewares/auth');
+const { handleError } = require('./middlewares/handleError');
 
 const {
   login,
@@ -13,26 +14,6 @@ const { PORT = 3000 } = process.env;
 
 const app = express();
 
-function Error(err, req, res, next) {
-  if (err.statusCode) {
-    if (err.detail) {
-      res.status(err.statusCode).send({
-        message: err.message,
-        detail: err.detail,
-      });
-    } else {
-      res.status(err.statusCode).send({
-        message: err.message,
-      });
-    }
-  } else {
-    const error = new InternalServerError();
-    res.status(error.statusCode).send({
-      message: error.message,
-    });
-  }
-}
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -41,10 +22,13 @@ const cardRouter = require('./routes/cards');
 
 app.post('/signup', createUser);
 app.post('/signin', login);
+
 app.use('/users', verifyToken, userRouter);
 app.use('/cards', verifyToken, cardRouter);
 
-app.use(Error);
+app.use(handleError);
+
+// app.use(errors());
 
 app.use((req, res) => {
   res.status(404);

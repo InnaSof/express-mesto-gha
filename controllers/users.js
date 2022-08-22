@@ -102,7 +102,7 @@ module.exports.login = (req, res, next) => {
   User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        next(new BadRequestError('Пользователь не зарегистрирован.'));
+        next(new UnauthorizedError('Пользователь не зарегистрирован.'));
       } else {
         bcrypt.compare(password, user.password, (err, data) => {
           if (err) {

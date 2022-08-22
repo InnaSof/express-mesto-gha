@@ -3,22 +3,23 @@ const UnauthorizedError = require('../errors/UnauthorizedError');
 const { SECRET_KEY } = require('../settings/conf');
 
 const verifyToken = (req, res, next) => {
-  const token = req.body.token || req.query.token || req.headers['x-access-token'];
-
-  if (!token) {
+  if (req.headers.authorization) {
+    const token = req.headers.authorization.split(' ')[1];
+    if (!token) {
+      next(new UnauthorizedError('Токен не найден!'));
+    }
+    jwt.verify(token, SECRET_KEY, (err, payload) => {
+      if (err) {
+        next(new UnauthorizedError('Токен не действителен!'));
+      }
+      if (payload) {
+        req.user = payload;
+        next();
+      }
+    });
+  } else {
     next(new UnauthorizedError('Требуется авторизация!'));
   }
-  jwt.verify(token, SECRET_KEY, (err, user) => {
-    if (err) {
-      next(new UnauthorizedError('Токен не действителен!'));
-    }
-    if (user) {
-      req.user = user;
-      next();
-    } else {
-      next();
-    }
-  });
 };
 
 module.exports = verifyToken;

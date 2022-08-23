@@ -16,7 +16,8 @@ module.exports.createCard = (req, res, next) => {
     .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return next(new BadRequestError('Переданы некорректные данные'));
+        next(new BadRequestError('Переданы некорректные данные'));
+        return;
       }
       next(err);
     });
@@ -26,10 +27,12 @@ module.exports.deleteCard = (req, res, next) => {
   Card.findById(req.params.cardId)
     .then((card) => {
       if (!card) {
-        return next(new NotFoundError('Карточка не найдена'));
+        next(new NotFoundError('Карточка не найдена'));
+        return;
       }
       if (card.owner.toString() !== req.user._id) {
-        return next(new ForbiddenError('Карточка может быть удалена только автором!'));
+        next(new ForbiddenError('Карточка может быть удалена только автором!'));
+        return;
       }
       Card.findByIdAndRemove(req.params.cardId)
         .then(() => res.send(card))
@@ -37,7 +40,8 @@ module.exports.deleteCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return next(new BadRequestError('Переданы некорректные данные'));
+        next(new BadRequestError('Переданы некорректные данные'));
+        return;
       }
       next(err);
     });
@@ -51,13 +55,15 @@ module.exports.likeCard = (req, res, next) => {
   )
     .then((card) => {
       if (!card) {
-        return next(new NotFoundError('Карточка не найдена'));
+        next(new NotFoundError('Карточка не найдена'));
+        return;
       }
       res.send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return next(new BadRequestError('Переданы некорректные данные'));
+        next(new BadRequestError('Переданы некорректные данные'));
+        return;
       }
       next(err);
     });
@@ -71,13 +77,15 @@ module.exports.dislikeCard = (req, res, next) => {
   )
     .then((card) => {
       if (!card) {
-        return next(new NotFoundError('Карточка не найдена'));
+        next(new NotFoundError('Карточка не найдена'));
+        return;
       }
       res.send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return next(new BadRequestError('Переданы некорректные данные'));
+        next(new BadRequestError('Переданы некорректные данные'));
+        return;
       }
       next(err);
     });

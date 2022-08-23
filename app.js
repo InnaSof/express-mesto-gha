@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const { handleError } = require('./middlewares/handleError');
+const handleError = require('./middlewares/handleError');
 const routes = require('./routes/index');
 
 const { PORT = 3000 } = process.env;

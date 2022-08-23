@@ -10,7 +10,6 @@ const {
   DUBLICATE_MONGOOSE_ERROR_CODE,
   SALT_ROUNDS,
   SECRET_KEY,
-  HTTP_OK,
   HTTP_CREATE,
 } = require('../settings/conf');
 
@@ -20,9 +19,6 @@ module.exports.createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
-  if (!email || !password) {
-    next(new BadRequestError('Поля не могут быть пустыми.', ['email', 'password']));
-  }
   bcrypt.hash(password, SALT_ROUNDS)
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
@@ -37,13 +33,13 @@ module.exports.createUser = (req, res, next) => {
     }))
     .catch((err) => {
       if (err.code === DUBLICATE_MONGOOSE_ERROR_CODE) {
-        next(new ConflictError('Такой e-mail уже зарегистрирован'));
+        return next(new ConflictError('Такой e-mail уже зарегистрирован'));
       }
       if (err.name === 'ValidationError') {
         const obj = Object.keys(err.errors)[0];
-        next(new BadRequestError(err.errors[obj].message));
+        return next(new BadRequestError(err.errors[obj].message));
       }
-      next();
+      next(err);
     });
 };
 
@@ -58,13 +54,13 @@ module.exports.getUserById = (req, res, next) => {
   User.findById(userId)
     .then((user) => {
       if (!user) {
-        next(new NotFoundError('Пользователь не найден'));
+        return next(new NotFoundError('Пользователь не найден'));
       }
       res.send(user);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequestError('Переданы некорректные данные'));
+        return next(new BadRequestError('Переданы некорректные данные'));
       }
       next(err);
     });
@@ -76,7 +72,7 @@ module.exports.updateUser = (req, res, next) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError('Переданы некорректные данные'));
+        return next(new BadRequestError('Переданы некорректные данные'));
       }
       next(err);
     });
@@ -88,38 +84,9 @@ module.exports.updateAvatar = (req, res, next) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError('Переданы некорректные данные'));
+        return next(new BadRequestError('Переданы некорректные данные'));
       }
       next(err);
-    });
-};
-
-module.exports.login = (req, res, next) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    next(new BadRequestError('Поля не могут быть пустыми.', ['email', 'password']));
-  }
-  User.findOne({ email }).select('+password')
-    .then((user) => {
-      if (!user) {
-        next(new UnauthorizedError('Пользователь не зарегистрирован.'));
-      } else {
-        bcrypt.compare(password, user.password, (err, data) => {
-          if (err) {
-            next(err);
-          }
-          if (data) {
-            const token = jwt.sign(
-              { _id: user._id },
-              SECRET_KEY,
-              { expiresIn: '7d' },
-            );
-            res.status(HTTP_OK).send({ message: 'Success!', access_token: token });
-          } else {
-            next(new UnauthorizedError('Не верные авторизационные данные!'));
-          }
-        });
-      }
     });
 };
 
@@ -127,14 +94,44 @@ module.exports.getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => {
       if (!user) {
-        next(new NotFoundError('Пользователь не найден'));
+        return next(new NotFoundError('Пользователь не найден'));
       }
       res.send(user);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequestError('Переданы некорректные данные'));
+        return next(new BadRequestError('Переданы некорректные данные'));
       }
       next(err);
     });
+};
+
+module.exports.login = (req, res, next) => {
+  const { email, password } = req.body;
+  User.findOne({ email }).select('+password')
+    .then((user) => {
+      if (!user) {
+        return next(new UnauthorizedError('Пользователь не нaйден'));
+      } else {
+        bcrypt.compare(password, user.password)
+          .then((matched) => {
+            if (!matched) {
+              return next(new UnauthorizedError('Неправильный пароль'));
+            }
+          });
+      }
+    })
+    .then((user) => {
+      const token = jwt.sign(
+        { _id: user._id },
+        SECRET_KEY,
+        { expiresIn: '7d' },
+      );
+      res.cookie('jwt', token, {
+        maxAge: 3600000 * 24 * 7,
+        httpOnly: true,
+        sameSite: true,
+      }).send({ token });
+    })
+    .catch(next);
 };

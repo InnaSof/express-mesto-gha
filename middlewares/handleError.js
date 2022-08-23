@@ -1,18 +1,7 @@
-const InternalServerError = require('../errors/InternalServerError');
-
 module.exports.handleError = (err, req, res, next) => {
-  if (err.statusCode) {
-    if (err.detail) {
-      res.status(err.statusCode).send({
-        message: err.message,
-        detail: err.detail,
-      });
-    } else {
-      res.status(err.statusCode).send({
-        message: err.message,
-      });
-    }
-  } else {
-    next(new InternalServerError());
-  }
+  const statusCode = err.statusCode || 500;
+
+  const message = statusCode === 500 ? 'На сервере произошла ошибка' : err.message;
+  res.status(statusCode).send({ message });
+  next();
 };

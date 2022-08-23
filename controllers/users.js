@@ -33,11 +33,13 @@ module.exports.createUser = (req, res, next) => {
     }))
     .catch((err) => {
       if (err.code === DUBLICATE_MONGOOSE_ERROR_CODE) {
-        return next(new ConflictError('Такой e-mail уже зарегистрирован'));
+        next(new ConflictError('Такой e-mail уже зарегистрирован'));
+        return;
       }
       if (err.name === 'ValidationError') {
         const obj = Object.keys(err.errors)[0];
-        return next(new BadRequestError(err.errors[obj].message));
+        next(new BadRequestError(err.errors[obj].message));
+        return;
       }
       next(err);
     });
@@ -54,13 +56,15 @@ module.exports.getUserById = (req, res, next) => {
   User.findById(userId)
     .then((user) => {
       if (!user) {
-        return next(new NotFoundError('Пользователь не найден'));
+        next(new NotFoundError('Пользователь не найден'));
+        return;
       }
       res.send(user);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return next(new BadRequestError('Переданы некорректные данные'));
+        next(new BadRequestError('Переданы некорректные данные'));
+        return;
       }
       next(err);
     });
@@ -72,7 +76,8 @@ module.exports.updateUser = (req, res, next) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return next(new BadRequestError('Переданы некорректные данные'));
+        next(new BadRequestError('Переданы некорректные данные'));
+        return;
       }
       next(err);
     });
@@ -84,7 +89,8 @@ module.exports.updateAvatar = (req, res, next) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return next(new BadRequestError('Переданы некорректные данные'));
+        next(new BadRequestError('Переданы некорректные данные'));
+        return;
       }
       next(err);
     });
@@ -94,13 +100,15 @@ module.exports.getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => {
       if (!user) {
-        return next(new NotFoundError('Пользователь не найден'));
+        next(new NotFoundError('Пользователь не найден'));
+        return;
       }
       res.send(user);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return next(new BadRequestError('Переданы некорректные данные'));
+        next(new BadRequestError('Переданы некорректные данные'));
+        return;
       }
       next(err);
     });
@@ -111,12 +119,14 @@ module.exports.login = (req, res, next) => {
   User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return next(new UnauthorizedError('Пользователь не нaйден'));
+        next(new UnauthorizedError('Пользователь не нaйден'));
+        return;
       } else {
         bcrypt.compare(password, user.password)
           .then((matched) => {
             if (!matched) {
-              return next(new UnauthorizedError('Неправильный пароль'));
+              next(new UnauthorizedError('Неправильный пароль'));
+              return;
             }
           });
       }

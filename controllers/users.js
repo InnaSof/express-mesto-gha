@@ -11,7 +11,6 @@ const {
   SALT_ROUNDS,
   SECRET_KEY,
   HTTP_CREATE,
-  HTTP_OK,
 } = require('../settings/conf');
 
 const User = require('../models/user');

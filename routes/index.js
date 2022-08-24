@@ -6,9 +6,12 @@ const NotFoundError = require('../errors/NotFoundError');
 const {
   login, createUser,
 } = require('../controllers/users');
+const {
+  signUpValidation, signInValidation,
+} = require('../middlewares/validation');
 
-router.post('/signup', createUser);
-router.post('/signin', login);
+router.post('/signup', signUpValidation, createUser);
+router.post('/signin', signInValidation, login);
 
 router.use(verifyToken);
 router.use('/users', userRouter);

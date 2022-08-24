@@ -2,13 +2,13 @@ const router = require('express').Router();
 const userRouter = require('./users');
 const cardRouter = require('./cards');
 const verifyToken = require('../middlewares/auth');
+const {
+  signUpValidation, signInValidation,
+} = require('../middlewares/validation');
 const NotFoundError = require('../errors/NotFoundError');
 const {
   login, createUser,
 } = require('../controllers/users');
-const {
-  signUpValidation, signInValidation,
-} = require('../middlewares/validation');
 
 router.post('/signup', signUpValidation, createUser);
 router.post('/signin', signInValidation, login);

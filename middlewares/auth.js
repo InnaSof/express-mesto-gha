@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const UnauthorizedError = require('../errors/UnauthorizedError');
 const { SECRET_KEY } = require('../settings/conf');
 
-const verifyToken = (req, res, next) => {
+module.exports = (req, res, next) => {
   if (req.headers.authorization) {
     const token = req.headers.authorization.split(' ')[1];
     if (!token) {
@@ -21,5 +21,3 @@ const verifyToken = (req, res, next) => {
     next(new UnauthorizedError('Требуется авторизация!'));
   }
 };
-
-module.exports = verifyToken;

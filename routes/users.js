@@ -7,7 +7,7 @@ const {
   getCurrentUser,
 } = require('../controllers/users');
 
-const verifyToken = require('../middlewares/auth');
+const auth = require('../middlewares/auth');
 
 const {
   userIdValidation,
@@ -15,7 +15,7 @@ const {
   updateAvatarValidation,
 } = require('../middlewares/validation');
 
-userRouter.use(verifyToken);
+userRouter.use(auth);
 
 userRouter.get('/', getUsers);
 userRouter.get('/me', getCurrentUser);

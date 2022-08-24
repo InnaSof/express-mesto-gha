@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const userRouter = require('./users');
 const cardRouter = require('./cards');
-const verifyToken = require('../middlewares/auth');
+const auth = require('../middlewares/auth');
 const {
   signUpValidation, signInValidation,
 } = require('../middlewares/validation');
@@ -13,7 +13,7 @@ const {
 router.post('/signup', signUpValidation, createUser);
 router.post('/signin', signInValidation, login);
 
-router.use(verifyToken);
+router.use(auth);
 router.use('/users', userRouter);
 router.use('/cards', cardRouter);
 

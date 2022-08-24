@@ -34,7 +34,7 @@ module.exports.deleteCard = (req, res, next) => {
         next(new ForbiddenError('Карточка может быть удалена только автором!'));
         return;
       }
-      return Card.findByIdAndRemove(req.params.cardId)
+      Card.findByIdAndRemove(req.params.cardId)
         .then(() => res.send(card))
         .catch(next);
     })
@@ -85,7 +85,7 @@ module.exports.dislikeCard = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new BadRequestError('Переданы некорректные данные'));
-        return
+        return;
       }
       next(err);
     });

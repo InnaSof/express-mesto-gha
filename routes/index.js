@@ -17,8 +17,8 @@ router.use(verifyToken);
 router.use('/users', userRouter);
 router.use('/cards', cardRouter);
 
-router.use((req, res, next) => {
-  next(new NotFoundError('Маршрут не найден'));
+router.use('*', () => {
+  throw new NotFoundError('Некорректный путь запроса');
 });
 
 module.exports = router;

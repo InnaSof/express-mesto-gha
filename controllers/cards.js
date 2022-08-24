@@ -27,18 +27,21 @@ module.exports.deleteCard = (req, res, next) => {
   Card.findById(req.params.cardId)
     .then((card) => {
       if (!card) {
-        throw new NotFoundError('Карточка не найдена');
+        next(new NotFoundError('Карточка не найдена'));
+        return;
       }
       if (card.owner.toString() !== req.user._id) {
-        throw ForbiddenError('Карточка может быть удалена только автором!');
+        next(new ForbiddenError('Карточка может быть удалена только автором!'));
+        return;
       }
-      Card.findByIdAndRemove(req.params.cardId)
+      return Card.findByIdAndRemove(req.params.cardId)
         .then(() => res.send(card))
         .catch(next);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw BadRequestError('Переданы некорректные данные');
+        next(new BadRequestError('Переданы некорректные данные'));
+        return;
       }
       next(err);
     });
@@ -82,7 +85,7 @@ module.exports.dislikeCard = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new BadRequestError('Переданы некорректные данные'));
-        return;
+        return
       }
       next(err);
     });

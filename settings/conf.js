@@ -3,7 +3,6 @@ const HTTP_OK = 200;
 const HTTP_CREATE = 201;
 const SALT_ROUNDS = 10;
 const SECRET_KEY = 'g+2r_1b)4((0st81-r&g8ugs7-i!c4*$s@ll=*(ev#y%ivek6n';
-const AVATAR_REGEX = /^https?:\/\/(www\.)?[a-zA-Z\d-]+\.[\w\d\-.~:/?#[\]@!$&'()*+,;=]{2,}#?$/;
 
 module.exports = {
   DUBLICATE_MONGOOSE_ERROR_CODE,
@@ -11,5 +10,4 @@ module.exports = {
   SECRET_KEY,
   HTTP_OK,
   HTTP_CREATE,
-  AVATAR_REGEX,
 };

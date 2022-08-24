@@ -11,6 +11,7 @@ const {
   SALT_ROUNDS,
   SECRET_KEY,
   HTTP_CREATE,
+  HTTP_OK,
 } = require('../settings/conf');
 
 const User = require('../models/user');
@@ -116,32 +117,23 @@ module.exports.getCurrentUser = (req, res, next) => {
 
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
+
   User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        next(new UnauthorizedError('Пользователь не нaйден'));
-        return;
-      } else {
-        bcrypt.compare(password, user.password)
-          .then((matched) => {
-            if (!matched) {
-              next(new UnauthorizedError('Неправильный пароль'));
-              return;
-            }
-          });
+        throw new UnauthorizedError('Данные не верны!');
       }
+      return Promise.all([
+        user,
+        bcrypt.compare(password, user.password),
+      ]);
     })
-    .then((user) => {
-      const token = jwt.sign(
-        { _id: user._id },
-        SECRET_KEY,
-        { expiresIn: '7d' },
-      );
-      res.cookie('jwt', token, {
-        maxAge: 3600000 * 24 * 7,
-        httpOnly: true,
-        sameSite: true,
-      }).send({ token });
+    .then(([user, isPasswordCorrect]) => {
+      if (!isPasswordCorrect) {
+        throw new UnauthorizedError('Данные не верны!');
+      }
+      return jwt.sign({ _id: user._id }, SECRET_KEY, { expiresIn: '7d' });
     })
+    .then((token) => res.send({ token }))
     .catch(next);
 };

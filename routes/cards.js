@@ -7,10 +7,14 @@ const {
   dislikeCard,
 } = require('../controllers/cards');
 
+const auth = require('../middlewares/auth');
+
 const {
   createCardValidation,
   cardIdValidation,
 } = require('../middlewares/validation');
+
+cardRouter.use(auth);
 
 cardRouter.get('/', getCards);
 cardRouter.post('/', createCardValidation, createCard);

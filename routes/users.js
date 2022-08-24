@@ -7,11 +7,15 @@ const {
   getCurrentUser,
 } = require('../controllers/users');
 
+const auth = require('../middlewares/auth');
+
 const {
   userIdValidation,
   updateUserValidation,
   updateAvatarValidation,
 } = require('../middlewares/validation');
+
+userRouter.use(auth);
 
 userRouter.get('/', getUsers);
 userRouter.get('/me', getCurrentUser);

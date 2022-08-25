@@ -31,10 +31,12 @@ module.exports.createUser = (req, res, next) => {
     }))
     .catch((err) => {
       if (err.code === DUBLICATE_MONGOOSE_ERROR_CODE) {
-        return next(new ConflictError('Такой e-mail уже зарегистрирован'));
+        next(new ConflictError('Такой e-mail уже зарегистрирован'));
+        return;
       }
       if (err.name === 'ValidationError') {
-        return next(new BadRequestError('Переданы некорректные данные'));
+        next(new BadRequestError('Переданы некорректные данные'));
+        return;
       }
       next(err);
     });

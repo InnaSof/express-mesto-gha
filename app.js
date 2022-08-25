@@ -2,9 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { errors } = require('celebrate');
-const router = require('./routes/index');
 const handleError = require('./middlewares/handleError');
 const auth = require('./middlewares/auth');
+const router = require('./routes/index');
 
 const { PORT = 3000 } = process.env;
 
